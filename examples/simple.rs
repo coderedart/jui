@@ -1,10 +1,7 @@
-use std::{
-    rc::Rc,
-    time::{Duration, Instant},
-};
+use std::{rc::Rc, time::Instant};
 
 use glfw_passthrough::{Context, Key};
-use glow::{HasContext, COLOR_BUFFER_BIT};
+use glow::HasContext;
 use skia_safe::{
     gpu::{backend_render_targets, SurfaceOrigin},
     *,
@@ -13,11 +10,15 @@ use skia_safe::{
 fn main() {
     unsafe {
         let mut glfw = glfw_passthrough::init::<()>(None).unwrap();
+        glfw.window_hint(glfw_passthrough::WindowHint::ScaleToMonitor(true));
+        glfw.window_hint(glfw_passthrough::WindowHint::TransparentFramebuffer(true));
+
         let (mut window, events) = glfw
             .create_window(800, 600, "jui", glfw_passthrough::WindowMode::Windowed)
             .unwrap();
         window.set_all_polling(true);
         glfw.make_context_current(Some(&window));
+        glfw.set_swap_interval(glfw_passthrough::SwapInterval::None);
         let gl = Rc::new(glow::Context::from_loader_function(|s| {
             window.get_proc_address(s)
         }));
@@ -97,7 +98,9 @@ fn main() {
             }
             let start = Instant::now();
             let canvas = surface.canvas();
-            canvas.clear(Color::WHITE);
+            canvas.reset_matrix();
+            canvas.scale((1.5, 1.5));
+            canvas.clear(Color::TRANSPARENT);
             render_frame(frame % 360, 12, 60, canvas);
             let paint = paint::Paint::default();
             canvas.draw_str(
